@@ -50,7 +50,7 @@ textarea {
   resize: vertical;
 }
 textarea:focus { outline: none; border-color: #e94560; }
-.btn-row { display: flex; gap: 0.5rem; margin-top: 0.8rem; }
+.btn-row { display: flex; gap: 0.5rem; margin-top: 0.8rem; flex-wrap: wrap; }
 button {
   padding: 0.5rem 1.2rem;
   border: none;
@@ -63,6 +63,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 button:active:not(:disabled) { transform: scale(0.97); }
 .btn-primary { background: #e94560; color: #fff; }
 .btn-secondary { background: #0f3460; color: #e0e0e0; }
+.btn-preset { background: #533483; color: #e0e0e0; font-size: 0.8rem; padding: 0.4rem 0.8rem; }
 .output-box {
   margin-top: 0.8rem;
   background: #0a0a1a;
@@ -81,6 +82,13 @@ button:active:not(:disabled) { transform: scale(0.97); }
   color: #888;
   margin-top: 0.4rem;
 }
+.preset-label {
+  display: block;
+  margin-top: 0.8rem;
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+  color: #aaa;
+}
 </style>
 </head>
 <body>
@@ -88,24 +96,11 @@ button:active:not(:disabled) { transform: scale(0.97); }
 <h1>Foxcall Playground</h1>
 <div class="container">
 
-  <!-- BF → Foxcall converter -->
-  <div class="panel">
-    <h2>BF → Foxcall Converter</h2>
-    <label for="bf-input">Brainfuck code</label>
-    <textarea id="bf-input" rows="3" placeholder="e.g. +++++++++[>+++++++++<-]>++."></textarea>
-    <div class="btn-row">
-      <button class="btn-primary" id="btn-convert" disabled>Convert</button>
-      <button class="btn-secondary" id="btn-copy">Copy to Runner</button>
-    </div>
-    <label>Result</label>
-    <div class="output-box" id="convert-result"></div>
-  </div>
-
   <!-- Foxcall runner -->
   <div class="panel">
     <h2>Foxcall Runner</h2>
     <label for="fox-input">Foxcall code</label>
-    <textarea id="fox-input" rows="4" placeholder="ルルルールビー..."></textarea>
+    <textarea id="fox-input" rows="4" placeholder="ルールルルルルールビーカイギ"></textarea>
     <label for="stdin-input">Stdin</label>
     <textarea id="stdin-input" rows="2" placeholder="(optional)"></textarea>
     <div class="btn-row">
@@ -116,6 +111,21 @@ button:active:not(:disabled) { transform: scale(0.97); }
     <label>stderr</label>
     <div class="output-box error" id="stderr"></div>
     <div class="status" id="status">Loading WASM...</div>
+    <span class="preset-label">Presets</span>
+    <div class="btn-row" id="preset-buttons"></div>
+  </div>
+
+  <!-- BF → Foxcall converter -->
+  <div class="panel">
+    <h2>BF → Foxcall Converter</h2>
+    <label for="bf-input">Brainf_ck code</label>
+    <textarea id="bf-input" rows="3" placeholder="e.g. +++++++++[>+++++++++<-]>++."></textarea>
+    <div class="btn-row">
+      <button class="btn-primary" id="btn-convert" disabled>Convert</button>
+      <button class="btn-secondary" id="btn-copy">Copy to Runner</button>
+    </div>
+    <label>Result</label>
+    <div class="output-box" id="convert-result"></div>
   </div>
 
 </div>
@@ -125,19 +135,37 @@ import init, { execute, translate_bf_into_foxcall } from './pkg/foxcall.js';
 
 const $ = id => document.getElementById(id);
 
-$('btn-convert').addEventListener('click', () => {
-  const bf = $('bf-input').value;
-  if (!bf) return;
-  try {
-    $('convert-result').textContent = translate_bf_into_foxcall(bf);
-  } catch (e) {
-    $('convert-result').textContent = 'Error: ' + e.message;
-  }
-});
+const presets = [
+  {
+    name: "Example 1: Echo 5 chars",
+    code: "ルルルールルルールルルールルルールルルールビールービールルルルルールルールルルルーカイギ",
+    stdin: "Hello, World!",
+  },
+  {
+    name: "Example 2: 1-digit add",
+    code: "ビールールルルールルルールルルールルルールルルールルルールビールルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールールルルルーカイギビールビールルールルルールールルルルーカイギルルールルルルルー",
+    stdin: "35\n",
+  },
+  {
+    name: "Example 3: SmartHR",
+    code: "ルルルールルルールルルールルルールルルールルルールルルールルルールルルールビールールルルールルルールルルールルルールルルールルルールルルールルルールルルールルールルルルーカイギルールルルールルルールルルルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルルルールルルールルルールルルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルールルルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルールルルルルールールビーカイギ",
+    stdin: "",
+  },
+];
 
-$('btn-copy').addEventListener('click', () => {
-  const t = $('convert-result').textContent;
-  if (t && !t.startsWith('Error:')) $('fox-input').value = t;
+const presetContainer = $('preset-buttons');
+presets.forEach(p => {
+  const btn = document.createElement('button');
+  btn.className = 'btn-preset';
+  btn.textContent = p.name;
+  btn.addEventListener('click', () => {
+    $('fox-input').value = p.code;
+    $('stdin-input').value = p.stdin;
+    $('stdout').textContent = '';
+    $('stderr').textContent = '';
+    $('status').textContent = 'Preset loaded.';
+  });
+  presetContainer.appendChild(btn);
 });
 
 $('btn-run').addEventListener('click', () => {
@@ -153,6 +181,21 @@ $('btn-run').addEventListener('click', () => {
     $('stderr').textContent = e.message;
     $('status').textContent = 'Error';
   }
+});
+
+$('btn-convert').addEventListener('click', () => {
+  const bf = $('bf-input').value;
+  if (!bf) return;
+  try {
+    $('convert-result').textContent = translate_bf_into_foxcall(bf);
+  } catch (e) {
+    $('convert-result').textContent = 'Error: ' + e.message;
+  }
+});
+
+$('btn-copy').addEventListener('click', () => {
+  const t = $('convert-result').textContent;
+  if (t && !t.startsWith('Error:')) $('fox-input').value = t;
 });
 
 await init();
