@@ -16,14 +16,13 @@ pub enum Insn {
 pub use parser::parse;
 pub use vm::Machine;
 
-pub fn execute(src: &str) -> Result<(), String> {
+pub fn execute(src: &str, input: &[u8]) -> Result<String, String> {
     let insns = parse(src)?;
-    let mut machine = Machine::new(insns);
+    let mut machine = Machine::new(insns, input.to_vec());
     machine.run();
-    Ok(())
+    Ok(String::from_utf8_lossy(&machine.into_output()).into_owned())
 }
 
-/// helper for debugging
 pub fn translate_bf_into_foxcall(src: &str) -> String {
     let mut result = String::new();
     for c in src.chars() {
@@ -40,4 +39,19 @@ pub fn translate_bf_into_foxcall(src: &str) -> String {
         }
     }
     result
+}
+
+#[cfg(target_arch = "wasm32")]
+mod wasm {
+    use wasm_bindgen::prelude::*;
+
+    #[wasm_bindgen]
+    pub fn execute(src: &str, stdin: &str) -> Result<String, JsError> {
+        crate::execute(src, stdin.as_bytes()).map_err(|e| JsError::new(&e))
+    }
+
+    #[wasm_bindgen]
+    pub fn translate_bf_into_foxcall(src: &str) -> String {
+        crate::translate_bf_into_foxcall(src)
+    }
 }
